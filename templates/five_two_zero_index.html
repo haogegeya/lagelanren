@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <title>COMMAND 搜</title>
+    <link
+            rel="stylesheet"
+            href="/two/static/css/index.css"
+    />
+    <link rel="stylesheet" href="/two/static/css/content.css"/>
+    <!-- Import Vue 3 -->
+    <script src="/two/static/js/vue@3.js"></script>
+    <!-- Import component library -->
+    <script src="/two/static/js/element-plus.js"></script>
+    <!-- Import component library -->
+    <script src="/two/static/js/axios.min.js"></script>
+    <!-- jQuery文件。务必在bootstrap.min.js 之前引入 -->
+    <script src="/two/static/js/jquery3.5.js"></script>
+    <!-- popper.min.js 用于弹窗、提示、下拉菜单 -->
+    <script src="/two/static/js/popper.min.js"></script>
+    <script src="/two/static/js/ckeditor.js"></script>
+    <script src="/two/static/js/ckeditor5vue/ckeditor.js"></script>
+</head>
+
+
+<body scroll="no">
+<dev id="app">
+    <div id="index" v-if="index==1">
+        <div id="index-main">
+            <h1>Hello Stranger</h1>
+            {#            <div class="search-form">#}
+            {#                <el-checkbox v-model="checked1">只看男</el-checkbox>#}
+            {#                <el-checkbox v-model="checked2">只看女</el-checkbox>#}
+            {#                <el-checkbox v-model="checked2">高质量</el-checkbox>#}
+            {#                <el-checkbox v-model="checked2">有图</el-checkbox>#}
+            {#            </div>#}
+
+            <div id="index-search">
+                <el-input v-model="input" placeholder="多个关键词空格隔开，例如：北京 程序员"
+                          @keyup.enter="search" class="search-details"></el-input>
+                <el-button @click="search">搜索</el-button>
+            </div>
+            <div class="saying">
+                <el-text style="font-weight: bold;">真实总是没有错，但是我们的面具只要不狰狞，是不是已经足够。</el-text>
+                <br>
+                <br>
+                <el-text style="color: #6c757d;font-style: italic">
+                    - 韩寒 《1988我想和这个世界谈谈》
+                </el-text>
+            </div>
+
+        </div>
+    </div>
+    <div id="details" v-if="index==2">
+        <div id="details-header">
+            <div id="details-header-main">
+                <span style="display: inline">Hello Stranger</span>
+                <transition name="input-show">
+                    <el-input id="details-input" v-model="input" placeholder="多个关键词空格隔开，例如：北京 程序员"
+                              @keyup.enter="search" class="search-details"></el-input>
+                </transition>
+                <el-button @click="search">搜索</el-button>
+            </div>
+        </div>
+        <div id="details-main">
+            <div id="details-main-content">
+                <el-card v-for="i in content" id="details-main-card" style="width: 100%">
+                    <template #header>
+                        <div>
+                            <el-avatar :size="50" :src="i.head_url"></el-avatar>
+                            <el-text>[[ i.author ]]</el-text>
+                            <a href="https://www.zhihu.com/question/ + i.answer_id">去看评论</a>
+                            <el-text v-if="i.author_id!=''">or</el-text>
+                            <a href="https://www.zhihu.com/question/i.answer_id"
+                               v-if="i.author_id!=''">去找Ta</a>
+                        </div>
+                    </template>
+                    <div v-html="i.content">
+                    </div>
+                </el-card>
+                <el-pagination background layout="prev, pager, next" :total="total" @current-change="currentChange"></el-pagination>
+            </div>
+        </div>
+    </div>
+    <div id="editor" v-if="index==3">
+        <div id="editor-main">
+            <div style="width: 80%">
+                <ckeditor :editor="editor" v-model="formData.text" :config="editorConfig"></ckeditor>
+                <el-button type="primary" @click="submitDialog=true" style="width: 100%; margin-top: 10px">提交
+                </el-button>
+            </div>
+
+        </div>
+
+    </div>
+
+<div id="footer" v-if="index==1">
+        <div>
+            <div id="footer-main">
+                <div>
+                    <a href="#" @click="addShow">发布</a>
+                    <el-divider direction="vertical"></el-divider>
+                    <a href="#" @click="addShow">留言</a>
+                </div>
+                <span>收藏本站请使用 Ctrl+D 或者Command+d</span>
+                <span>本站共2131数据,每天凌晨3点更新</span>
+            </div>
+        </div>
+    </div>
+</dev>
+
+
+
+</body>
+<script>
+    const HelloVueApp = {
+        delimiters: ["[[", "]]"],
+        data() {
+            return {
+                input: "",
+                index: 1,
+                content: "请尝试输入一些字符，进行搜索！",
+                menu_loading: false,
+                editor: ClassicEditor,
+                labels: [],
+                formData: {
+                    "labels": [],
+                    "text": '',
+                    "summary": ""
+                },
+                editorConfig: {
+                    simpleUpload: {
+                        uploadUrl: "/code/core/image",
+                        headers: {
+                            name: "img_url"
+                        }
+                    }
+                },
+                submitDialog: false,
+                saveing: false,
+                siteConfig: {},
+                total: 0
+            }
+        },
+        mounted() {
+            let that = this
+            axios.get('/code/core/site')
+                .then(function (res) {
+                    console.log(res.data[0])
+                    that.siteConfig = res.data[0]
+                    document.body.style.setProperty('background-image', "linear-gradient(to left, rgba(255, 0, 149, 0.2), rgba(0, 247, 255, 0.2)), url(" + that.siteConfig.background + ")")
+                })
+                .catch(function (error) {
+                    console.log(error);
+                });
+        },
+        methods: {
+            search() {
+                let that = this
+                if (that.input == "") {
+                    document.querySelector(".search-details").style.animationPlayState = "running"
+                    setTimeout(() => {
+                        document.querySelector(".search-details").style.animationPlayState = "paused"
+                    }, 1200)
+                    return;
+                }
+                that.menu_loading = true
+                that.index = 2
+                axios.get('/zhihu/data?q=' + that.input)
+                    .then(function (res) {
+                        that.full_content = res.data
+                        that.content = res.data.results == 0 ? '可惜,屁都没找到~~~' : res.data.results
+                        that.menu_loading = false
+                        that.total = res.data.count
+
+                    })
+                    .catch(function (error) {
+                        console.log(error);
+                    });
+            },
+            currentChange(page) {
+                let that = this
+                that.menu_loading = true
+                document.body.scrollTop = 0
+                axios.get('/zhihu/data?page=' + page + "&q=" + that.input)
+                    .then(function (res) {
+                        that.full_content = res.data
+                        that.content = res.data.results == 0 ? '可惜,屁都没找到~~~' : res.data.results
+                        that.menu_loading = false
+
+                    })
+                    .catch(function (error) {
+                        console.log(error);
+                    });
+            }
+        }
+
+    }
+    Vue.createApp(HelloVueApp).use(ElementPlus).use(CKEditor).mount('#app')
+</script>
+<style>
+    html, body {
+        width: 100%;
+        height: 100%;
+        overflow-x: hidden;
+    {#overflow-y: hidden;#}
+    }
+
+    body {
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+        background-size: cover;
+    {#background-image: linear-gradient(to left, rgba(255, 0, 149, 0.2), rgba(0, 247, 255, 0.2)), url(https://pica.zhimg.com/80/v2-5c512acfe4d49f2dd3aca874209530d4_720w.webp);#}
+        background-image: url(https://pic1.zhimg.com/v2-6e125bd747bc1feaf9c3c1be1238ffb8_r.jpg?source=1940ef5c);
+        margin: 0px;
+    }
+
+    {#body::-webkit-scrollbar {#}
+    {#    display: none;#}
+    {#{#}
+    #}#}
+
+    #app {
+        display: flex;
+        flex-direction: column;
+    }
+
+    #index {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    #index #index-main {
+        width: 50%;
+        height: 200px;
+        margin-top: 10%;
+    }
+
+    #index #index-main h1 {
+        margin-bottom: 50px;
+        text-align: center;
+        font-weight: bold;
+    }
+
+    #index-search {
+        display: flex;
+    }
+
+    #details {
+        width: 100%;
+    }
+
+    .search-details {
+        animation: shaking 1.2s ease-in-out infinite;
+        /* 初始暂停播放，后续通过js控制播放 */
+        animation-play-state: paused;
+    }
+
+    /* 通过translate3d的x轴移动去控制水平移动抖动效果 */
+    @keyframes shaking {
+
+        10%,
+        90% {
+            transform: translate3d(-1.2px, 0, 0);
+        }
+
+        20%,
+        80% {
+            transform: translate3d(2px, 0, 0);
+        }
+
+        30%,
+        70% {
+            transform: translate3d(-4.8px, 0, 0);
+        }
+
+        40%,
+        60% {
+            transform: translate3d(4.8px, 0, 0);
+        }
+
+        50% {
+            transform: translate3d(-4.8px, 0, 0);
+        }
+
+    }
+
+    #details-header {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: sticky;
+        top: 0;
+        background: white;
+        min-height: 50px;
+
+    }
+
+    #details-header-main {
+        width: 40%;
+        display: flex;
+        align-items: center;
+    }
+
+    #details-header span {
+        text-align: center;
+        font-weight: bold;
+        display: inline-block;
+        margin-right: 10px;
+        white-space: nowrap;
+        -webkit-align-items: center;
+    }
+
+    #details-main {
+        margin-top: 20px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid rgba(166, 162, 162, 0.97);
+        {#border-top: 1px solid rgba(166, 162, 162, 0.97);#}
+        height: auto;
+        min-height: 400px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    #details-main-content {
+        margin-top: 20px;
+        font-size: small;
+        width: 80%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+
+    #details-main-card {
+        margin-bottom: 10px;
+    }
+
+
+    #footer {
+        position: fixed;
+        bottom: 5px;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+    }
+
+    #footer-main {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    #footer-main a {
+    }
+
+    #footer-main span {
+        color: #6c757d;
+        font-size: small;
+    }
+
+    .saying {
+        text-align: center;
+        margin-top: 100px;
+    }
+</style>
+</html>

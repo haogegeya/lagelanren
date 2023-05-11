@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>day</title>
+
+
+<script src="D:\eclipse-workspace\day\src\main\resources\static\js\vue@next.js"></script>
+<script src="D:\gitProjects\ckeditor5-vue-master\node_modules\@ckeditor\ckeditor5-editor-classic\build\ckeditor.js"></script>
+<script src="D:\gitProjects\ckeditor5-vue-master\dist\ckeditor.js"></script>
+
+<script type="text/javascript" src="D:\eclipse-workspace\day\src\main\resources\static\js\element-plus.js"></script>
+<script src="D:\eclipse-workspace\day\src\main\resources\static\js\zh-cn.js"></script>
+<link rel="stylesheet" href="D:\eclipse-workspace\day\src\main\resources\static\css\index.css" />
+<style>
+.is-selected {
+  color: #1989fa;
+}
+</style>
+</head>
+<body style="background-color: #E4E7ED;">
+	<dev id="app">
+		 <!-- <ckeditor :editor="editor" v-model="editorData" :config="editorConfig"></ckeditor> -->
+		<!-- <test></test> -->
+		 <el-calendar v-model="value"></el-calendar>
+
+<el-form :inline="true" :model="queryParams">
+    <el-form-item label="">
+      <el-input v-model="queryParams.key" placeholder="关键词" />
+    </el-form-item>
+    </el-form-item>
+    <el-form-item>
+    	 <el-date-picker
+        v-model="queryParams.time"
+        type="daterange"
+        unlink-panels
+        range-separator="To"
+        start-placeholder="开始时间"
+        end-placeholder="结束时间"
+        :default-value=[]
+      />
+    </el-form-item>
+    <el-form-item>
+      <el-button type="primary" @click="onSubmit">Query</el-button>
+    </el-form-item>
+  </el-form>
+
+	</dev>
+</body>
+<script>
+const App = {
+		  data() {
+		    return {
+		      editor: ClassicEditor,
+		      editorData: '11',
+		      queryParams:{
+		      	key:"",
+		      	time: []
+		      }
+		    }
+		  },
+		  methods:{
+				onSubmit(){
+					console.log(this.queryParams.time[0].toLocaleDateString())
+					console.log(this.queryParams.time[1].toLocaleDateString())
+				}
+		  }
+		  
+		}
+	
+app = Vue.createApp(App)
+app.use(CKEditor);
+app.use(ElementPlus,{
+    locale: ElementPlusLocaleZhCn,
+});
+app.component('test', {
+  data() {
+    return {
+      d: 11,
+      editorData: 'dddd',
+      value: new Array()
+    }
+  },
+  methods:{
+  	doSomeThing(){
+  		console.log("++++++++++++++++++++++++")
+  	},
+  	VisibleMonthChanged(){
+  		console.log("ddd")
+  	}
+  },
+  watch: {
+    value:function(val, newval) {
+        console.log(val)
+        console.log(newval.toLocaleDateString())
+    }
+},
+  template: `
+  <el-calendar v-model="value">
+    <template #dateCell="{ data }">
+    <div @click="doSomeThing">
+      <p :class="data.isSelected ? 'is-selected' : ''">
+        {{ data.day.split('-')[2] }}
+      </p>
+    </div>
+    </template>
+  </el-calendar>
+`
+})
+app.mount('#app');
+</script>
+</html>
+<!-- 
+{ "isSelected": true, "type": "current-month", "day": "2022-04-13", "date": "2022-04-13T06:50:48.448Z" } -->

@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>COMMAND 搜</title>
+    <link
+            rel="stylesheet"
+            href="two/static/css/index.css"
+    />
+    <link rel="stylesheet" href="two/static/css/content.css"/>
+    <!-- Import Vue 3 -->
+    <script src="two/static/js/vue@3.js"></script>
+    <!-- Import component library -->
+    <script src="two/static/js/element-plus.js"></script>
+    <!-- Import component library -->
+    <script src="two/static/js/axios.min.js"></script>
+    <!-- jQuery文件。务必在bootstrap.min.js 之前引入 -->
+    <script src="two/static/js/jquery3.5.js"></script>
+    <!-- popper.min.js 用于弹窗、提示、下拉菜单 -->
+    <script src="two/static/js/popper.min.js"></script>
+    <script src="two/static/js/ckeditor.js"></script>
+    <script src="two/static/js/ckeditor5vue/ckeditor.js"></script>
+</head>
+
+
+<body scroll="no">
+<dev id="app">
+    <div id="index" v-if="index==1">
+        <div id="index-main">
+            <h2>COMMOND~~搜~~</h2>
+            <div id="index-search">
+                <el-input v-model="input" placeholder="输入搜索词" @keyup.enter="search"></el-input>
+                <el-button @click="search">搜索</el-button>
+            </div>
+        </div>
+    </div>
+    <div id="details" v-if="index!=1 && index!=4">
+        <div id="details-header">
+            <div id="details-header-main">
+                <span style="display: inline">COMMOND~~搜~~</span>
+                <transition name="input-show">
+                    <el-input id="details-input" v-model="input" placeholder="输入搜索词"
+                              @keyup.enter="search"></el-input>
+                </transition>
+                <el-button @click="search">搜索</el-button>
+            </div>
+        </div>
+        <div id="details-main">
+            <div id="details-main-content" v-html="content" v-if="index==2">
+            </div>
+            <div id="details-main-menu" v-if="index==3" v-loading="menu_loading" element-loading-background="rgba(0,0,0,0)">
+                <ul v-infinite-scroll="load" class="infinite-list" style="overflow: auto">
+                    <li v-for="i in full_content" :key="i" class="infinite-list-item"><a href="#" @click="show(i)">[[
+                        i.summary ]]</a></li>
+                </ul>
+            </div>
+
+        </div>
+    </div>
+    <div id="editor" v-if="index==4">
+        <div id="editor-main">
+            <div style="width: 80%">
+                <ckeditor :editor="editor" v-model="formData.text" :config="editorConfig"></ckeditor>
+                {#            <el-transfer v-model="formData.labels" :data="labels"  :titles=['所有标签','选中标签']></el-transfer>#}
+                <el-button type="primary" @click="submitDialog=true" style="width: 100%; margin-top: 10px">提交
+                </el-button>
+            </div>
+
+        </div>
+
+    </div>
+    <div id="footer">
+        <div id="footer-main">
+            <div>
+                <a href="#" @click="addShow">添加</a>
+                <el-divider direction="vertical"></el-divider>
+                <a href="#" @click="index=1">主页</a>
+                <el-divider direction="vertical" v-if="index==2"></el-divider>
+                <a href="#" @click="index=3" v-if="index==2">结果页</a>
+            </div>
+            <span>收藏本站请使用 Ctrl+D 或者Command+d</span>
+            <span>本站共[[ siteConfig.total_data ]]条数据,累计查询[[ siteConfig.total_query ]]次,有效查询[[ siteConfig.total_query_success ]]次</span>
+        </div>
+    </div>
+    {#    提交模态框#}
+    <el-dialog
+            v-model="submitDialog"
+            title=""
+            width="50%"
+            :before-close="handleClose"
+    >
+        <el-form :model="formData" label-position="top">
+            <el-form-item label="概览：">
+                <el-input v-model="formData.summary" type="textarea" rows="5" placeholder="输入128字符以内"/>
+            </el-form-item>
+            <el-form-item label="标签：">
+                <el-transfer v-model="formData.labels" :data="labels" :titles=['所有标签','选中标签']></el-transfer>
+            </el-form-item>
+        </el-form>
+        <template #footer>
+      <span class="dialog-footer">
+        <el-button type="primary" @click="save" :loading="saveing">
+          确定
+        </el-button>
+      </span>
+        </template>
+    </el-dialog>
+</dev>
+
+</body>
+<script>
+    const HelloVueApp = {
+        delimiters: ["[[", "]]"],
+        data() {
+            return {
+                input: "",
+                index: 1,
+                content: "请尝试输入一些字符，进行搜索！",
+                full_content: [],
+                menu_loading: false,
+                editor: ClassicEditor,
+                labels: [],
+                formData: {
+                    "labels": [],
+                    "text": '',
+                    "summary": ""
+                },
+                editorConfig: {
+                    simpleUpload: {
+                        uploadUrl: "/code/core/image",
+                        headers: {
+                            name: "img_url"
+                        }
+                    }
+                },
+                submitDialog: false,
+                saveing: false,
+                siteConfig: {},
+            }
+        },
+        mounted() {
+            let that = this
+            axios.get('/code/core/site')
+                .then(function (res) {
+                    console.log(res.data[0])
+                    that.siteConfig = res.data[0]
+                    document.body.style.setProperty('background-image', "linear-gradient(to left, rgba(255, 0, 149, 0.2), rgba(0, 247, 255, 0.2)), url(" + that.siteConfig.background + ")")
+                })
+                .catch(function (error) {
+                    console.log(error);
+                });
+        },
+        methods: {
+            search() {
+                let that = this
+                if (that.index == 1 && that.input == "") {
+                    this.index = 2
+                    return
+                }
+                if (that.input == "") {
+                    document.querySelector("#details-input").style.animationPlayState = "running"
+                    setTimeout(()=>{
+                        document.querySelector("#details-input").style.animationPlayState = "paused"
+                    }, 1200)
+                    return;
+                }
+                that.index = 3
+                that.menu_loading = true
+                axios.get('/code/core/content?text=' + that.input)
+                    .then(function (res) {
+                        that.full_content = res.data
+                        that.index = res.data.length == 0 ? 2 : 3
+                        that.content = res.data.length == 0 ? '可惜,屁都没找到~~~' : "请尝试输入一些字符，进行搜索！"
+                        that.menu_loading = false
+
+                    })
+                    .catch(function (error) {
+                        console.log(error);
+                    });
+            },
+            load() {
+
+            },
+            show(i) {
+                console.log(i)
+                this.content = i.text;
+                this.index = 2
+            },
+            onCancel() {
+                this.index = 1
+            },
+            addShow() {
+                this.index = 4
+                let that = this
+                axios.get('/code/core/label')
+                    .then(function (res) {
+                        console.log(res.data);
+                        that.labels = []
+                        for (let i = 0; i < res.data.length; i++) {
+                            that.labels.push({
+                                key: res.data[i]["id"],
+                                label: res.data[i]["name"],
+                            })
+                        }
+                    })
+                    .catch(function (error) {
+                        console.log(error);
+                    });
+            },
+            save() {
+                let that = this
+                that.saveing = true
+                console.log(that.formData)
+                axios({
+                    url: '/code/core/content',
+                    method: 'post',
+                    data: that.formData,
+                    headers: {
+                        'Content-Type': 'multipart/form-data',//含有附件的表单提交的Content-Type
+                    },
+                }).then(function (res) {
+                    if (res.status === 201) {
+                        ElementPlus.ElMessage({
+                            message: '添加成功',
+                            type: 'success',
+                        })
+                    }
+                    that.saveing = false
+                    that.submitDialog = false
+                    that.index = 1
+                })
+                    .catch(function (error) {
+                        console.log(error);
+                    });
+            }
+        }
+
+    }
+    Vue.createApp(HelloVueApp).use(ElementPlus).use(CKEditor).mount('#app')
+</script>
+<style>
+    html, body {
+        width: 100%;
+        height: 100%;
+        overflow-x: hidden;
+    }
+
+    body {
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+        background-size: cover;
+    }
+
+    body::-webkit-scrollbar {
+        display: none;
+    }
+
+    #app {
+        display: flex;
+        flex-direction: column;
+    }
+
+    #index {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    #index #index-main {
+        width: 50%;
+        height: 200px;
+        margin-top: 10%;
+    }
+
+    #index #index-main h2 {
+        margin-bottom: 50px;
+        text-align: center;
+        font-weight: bold;
+    }
+
+    #index-search {
+        display: flex;
+    }
+
+    #details {
+    }
+
+    #details-input {
+        animation: shaking 1.2s ease-in-out infinite;
+        /* 初始暂停播放，后续通过js控制播放 */
+        animation-play-state: paused;
+    }
+    /* 通过translate3d的x轴移动去控制水平移动抖动效果 */
+        @keyframes shaking {
+
+            10%,
+            90% {
+                transform: translate3d(-1.2px, 0, 0);
+            }
+
+            20%,
+            80% {
+                transform: translate3d(2px, 0, 0);
+            }
+
+            30%,
+            70% {
+                transform: translate3d(-4.8px, 0, 0);
+            }
+
+            40%,
+            60% {
+                transform: translate3d(4.8px, 0, 0);
+            }
+
+            50% {
+                transform: translate3d(-4.8px, 0, 0);
+            }
+        }
+
+    #details-header {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-top: 10px;
+    }
+
+    #details-header-main {
+        width: 40%;
+        display: flex;
+        align-items: center;
+    }
+
+    #details-header span {
+        text-align: center;
+        font-weight: bold;
+        display: inline-block;
+        margin-right: 10px;
+        white-space: nowrap;
+        -webkit-align-items: center;
+    }
+
+    #details-main {
+        margin-top: 20px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid rgba(166, 162, 162, 0.97);
+        border-top: 1px solid rgba(166, 162, 162, 0.97);
+        height: auto;
+        min-height: 400px;
+        display: flex;
+        justify-content: center;
+    }
+
+    #details-main-content {
+        width: 70%;
+        margin-top: 20px;
+        font-size: small;
+    }
+
+    .infinite-list {
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .infinite-list .infinite-list-item {
+        margin-bottom: 10px;
+    }
+
+    #footer {
+        display: flex;
+        justify-content: center;
+        margin-top: 30px;
+        margin-bottom: 50px;
+    }
+
+    #footer-main {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    #footer-main a {
+    }
+
+    #footer-main span {
+        color: #6c757d;
+        font-size: small;
+    }
+
+    #editor {
+    }
+
+    #editor-main {
+        display: flex;
+        justify-content: center;
+    {#width: 80%;#}
+    }
+</style>
+</html>
