@@ -18,6 +18,8 @@ class Content(ModelBase):
     comment_count = models.IntegerField("回复次数", default=0)
     content = models.TextField("内容")
     is_picture = models.BooleanField("是否包含图片", default=False)
+    is_zhihu = models.BooleanField("是否知乎", default=True)
+    is_activate = models.BooleanField("是否激活", default=False)
     is_deleted = models.BooleanField("是否删除",  default=False)
 
     class Meta:
@@ -26,3 +28,14 @@ class Content(ModelBase):
 
     def __str__(self):
         return self.answer_id
+
+class Key(ModelBase):
+    key = models.CharField('搜索词', max_length=512)
+    total = models.IntegerField("次数统计")
+
+    class Meta:
+        verbose_name = '搜索词统计'
+        verbose_name_plural = '搜索词统计'
+
+    def __str__(self):
+        return self.key

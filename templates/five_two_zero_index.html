@@ -37,7 +37,7 @@
 
             <div id="index-search">
                 <el-input v-model="input" placeholder="多个关键词空格隔开，例如：北京 程序员"
-                          @keyup.enter="search" class="search-details"></el-input>
+                          @keyup.enter="search" class="search-details" ></el-input>
                 <el-button @click="search">搜索</el-button>
             </div>
             <div class="saying">
@@ -63,7 +63,7 @@
             </div>
         </div>
         <div id="details-main">
-            <div id="details-main-content">
+            <div id="details-main-content" v-if="content.length!=0">
                 <el-card v-for="i in content" id="details-main-card" style="width: 100%">
                     <template #header>
                         <div>
@@ -78,9 +78,11 @@
                     <div v-html="i.content">
                     </div>
                 </el-card>
-                <el-pagination background layout="prev, pager, next" :total="total" @current-change="currentChange"></el-pagination>
+                <el-pagination background layout="prev, pager, next" :total="total"
+                               @current-change="currentChange"></el-pagination>
             </div>
         </div>
+    </div>
     </div>
     <div id="editor" v-if="index==3">
         <div id="editor-main">
@@ -94,7 +96,7 @@
 
     </div>
 
-<div id="footer" v-if="index==1">
+    <div id="footer" v-if="index==1">
         <div>
             <div id="footer-main">
                 <div>
@@ -103,12 +105,11 @@
                     <a href="#" @click="addShow">留言</a>
                 </div>
                 <span>收藏本站请使用 Ctrl+D 或者Command+d</span>
-                <span>本站共2131数据,每天凌晨3点更新</span>
+                <span>本站共[[ total ]]数据,每天凌晨3点更新</span>
             </div>
         </div>
     </div>
 </dev>
-
 
 
 </body>
@@ -119,7 +120,7 @@
             return {
                 input: "",
                 index: 1,
-                content: "请尝试输入一些字符，进行搜索！",
+                content: [],
                 menu_loading: false,
                 editor: ClassicEditor,
                 labels: [],
@@ -157,22 +158,25 @@
         methods: {
             search() {
                 let that = this
-                if (that.input == "") {
-                    document.querySelector(".search-details").style.animationPlayState = "running"
-                    setTimeout(() => {
-                        document.querySelector(".search-details").style.animationPlayState = "paused"
-                    }, 1200)
-                    return;
-                }
                 that.menu_loading = true
                 that.index = 2
                 axios.get('/zhihu/data?q=' + that.input)
                     .then(function (res) {
                         that.full_content = res.data
-                        that.content = res.data.results == 0 ? '可惜,屁都没找到~~~' : res.data.results
+                        that.content = res.data.results
                         that.menu_loading = false
                         that.total = res.data.count
+                        if (res.data.results.length == 0) {
 
+                            ElementPlus.ElNotification({
+                                type: 'warning',
+                                message: "换个关键词试试吧",
+                            })
+                            document.querySelector(".search-details").style.animationPlayState = "running"
+                            setTimeout(() => {
+                                document.querySelector(".search-details").style.animationPlayState = "paused"
+                            }, 1200)
+                        }
                     })
                     .catch(function (error) {
                         console.log(error);
@@ -185,9 +189,14 @@
                 axios.get('/zhihu/data?page=' + page + "&q=" + that.input)
                     .then(function (res) {
                         that.full_content = res.data
-                        that.content = res.data.results == 0 ? '可惜,屁都没找到~~~' : res.data.results
+                        that.content = res.data.results
                         that.menu_loading = false
-
+                        if (res.data.results.length == 0) {
+                            document.querySelector(".search-details").style.animationPlayState = "running"
+                            setTimeout(() => {
+                                document.querySelector(".search-details").style.animationPlayState = "paused"
+                            }, 1200)
+                        }
                     })
                     .catch(function (error) {
                         console.log(error);
@@ -210,8 +219,7 @@
         background-repeat: no-repeat;
         background-attachment: fixed;
         background-size: cover;
-    {#background-image: linear-gradient(to left, rgba(255, 0, 149, 0.2), rgba(0, 247, 255, 0.2)), url(https://pica.zhimg.com/80/v2-5c512acfe4d49f2dd3aca874209530d4_720w.webp);#}
-        background-image: url(https://pic1.zhimg.com/v2-6e125bd747bc1feaf9c3c1be1238ffb8_r.jpg?source=1940ef5c);
+    {#background-image: linear-gradient(to left, rgba(255, 0, 149, 0.2), rgba(0, 247, 255, 0.2)), url(https://pica.zhimg.com/80/v2-5c512acfe4d49f2dd3aca874209530d4_720w.webp);#} background-image: url(https://pic1.zhimg.com/v2-6e125bd747bc1feaf9c3c1be1238ffb8_r.jpg?source=1940ef5c);
         margin: 0px;
     }
 
@@ -315,9 +323,7 @@
     #details-main {
         margin-top: 20px;
         padding-bottom: 20px;
-        border-bottom: 1px solid rgba(166, 162, 162, 0.97);
-        {#border-top: 1px solid rgba(166, 162, 162, 0.97);#}
-        height: auto;
+    {#border-bottom: 1px solid rgba(166, 162, 162, 0.97);#}{#border-top: 1px solid rgba(166, 162, 162, 0.97);#} height: auto;
         min-height: 400px;
         display: flex;
         flex-direction: column;
@@ -341,7 +347,7 @@
 
     #footer {
         position: fixed;
-        bottom: 5px;
+        bottom: 50px;
         width: 100%;
         display: flex;
         justify-content: center;

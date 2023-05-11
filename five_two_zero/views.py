@@ -21,7 +21,7 @@ class ContentView(mixins.ListModelMixin,
                generics.GenericAPIView):
     serializer_class = ContentSeriaslzer
     lookup_field = "id"
-    queryset = Content.objects.filter(is_deleted=False)
+    queryset = Content.objects.filter(is_deleted=False, is_activate=True).order_by("-update_time")
     parser_classes = [MultiPartParser]
     filter_backends = [DjangoFilterBackend]
     filterset_class = getContentFilter
