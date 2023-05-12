@@ -40,7 +40,8 @@ INSTALLED_APPS = [
     "rest_framework",
     "django_filters",
     "command_so",
-    "five_two_zero"
+    "five_two_zero",
+    "storage"
 ]
 
 MIDDLEWARE = [

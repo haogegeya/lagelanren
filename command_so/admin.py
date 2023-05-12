@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 # Register your models here.
-from .models import Label, Content, Image, SiteConfig
+from .models import Label, Content, SiteConfig
 
 
 @admin.register(Label)
@@ -15,9 +15,6 @@ class ContentAdmin(admin.ModelAdmin):
     list_display = ("id", "summary")
 
 
-@admin.register(Image)
-class ImageAdmin(admin.ModelAdmin):
-    list_display = ("id", "upload", "is_deleted")
 
 
 

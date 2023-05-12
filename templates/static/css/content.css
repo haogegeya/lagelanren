@@ -1,7 +1,7 @@
 /* ---- Cross-editor content styles. --------------------------------------------------------------- */
 .ck.ck-content:not(.ck-style-grid__button__preview) {
   /* Make sure all content containers have some min height to make them easier to locate. */
-  min-height: 500px;
+  min-height: 600px;
   padding: 1em 1.5em;
 }
 

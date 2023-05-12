@@ -22,10 +22,11 @@ from lagelanren import settings
 from command_so.views import index
 
 urlpatterns = [
-    path('code/admin/', admin.site.urls),
-    path("code/core", include("command_so.urls")),
-    path("zhihu", include("five_two_zero.urls")),
-    path("code", index, name="index")
+    path('two/admin/', admin.site.urls),
+    path("two/code/core", include("command_so.urls")),
+    path("two/zhihu", include("five_two_zero.urls")),
+    path("two/code", index, name="index"),
+    path("two/storage", include("storage.urls"))
 ]
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 urlpatterns += staticfiles_urlpatterns()

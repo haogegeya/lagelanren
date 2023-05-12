@@ -5,7 +5,7 @@
 
 from rest_framework import serializers
 
-from .models import Content, Label, Image, SiteConfig
+from .models import Content, Label, SiteConfig
 
 
 class ContentSeriaslzer(serializers.ModelSerializer):
@@ -17,7 +17,6 @@ class ContentSeriaslzer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         # validated_data = validated_data.pop("parent_category")
-        print(validated_data)
         labels = validated_data.pop("label")
         content = Content.objects.create(**validated_data)
         for item in labels:
@@ -31,15 +30,6 @@ class LabelSeriaslzer(serializers.ModelSerializer):
         model = Label
         fields = "__all__"
 
-class ImageSeriaslzer(serializers.ModelSerializer):
-    url = serializers.SerializerMethodField(read_only=True, required=False)
-
-    class Meta:
-        model = Image
-        fields = "__all__"
-
-    def get_url(self, ojb):
-        return ojb.upload.url
 
 class SiteConfigSeriaslzer(serializers.ModelSerializer):
     total_data = serializers.SerializerMethodField(read_only=True)

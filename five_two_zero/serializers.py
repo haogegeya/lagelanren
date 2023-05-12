@@ -5,7 +5,7 @@
 
 from rest_framework import serializers
 
-from .models import Content
+from .models import Content, LeaveMessage
 
 
 class ContentSeriaslzer(serializers.ModelSerializer):
@@ -13,13 +13,10 @@ class ContentSeriaslzer(serializers.ModelSerializer):
         model = Content
         fields = "__all__"
 
+class LeaveMessageSeriaslzer(serializers.ModelSerializer):
+    class Meta:
+        model = LeaveMessage
+        fields = "__all__"
 
-    def create(self, validated_data):
-        # validated_data = validated_data.pop("parent_category")
-        labels = validated_data.pop("label")
-        content = Content.objects.create(**validated_data)
-        for item in labels:
-            content.labels.add(item)
-        content.save()
-        return content
+
 

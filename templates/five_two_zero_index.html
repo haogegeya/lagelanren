@@ -37,7 +37,7 @@
 
             <div id="index-search">
                 <el-input v-model="input" placeholder="多个关键词空格隔开，例如：北京 程序员"
-                          @keyup.enter="search" class="search-details" ></el-input>
+                          @keyup.enter="search" class="search-details"></el-input>
                 <el-button @click="search">搜索</el-button>
             </div>
             <div class="saying">
@@ -56,7 +56,7 @@
             <div id="details-header-main">
                 <span style="display: inline">Hello Stranger</span>
                 <transition name="input-show">
-                    <el-input id="details-input" v-model="input" placeholder="多个关键词空格隔开，例如：北京 程序员"
+                    <el-input id="details-input" v-model="input" placeholder=""
                               @keyup.enter="search" class="search-details"></el-input>
                 </transition>
                 <el-button @click="search">搜索</el-button>
@@ -64,18 +64,31 @@
         </div>
         <div id="details-main">
             <div id="details-main-content" v-if="content.length!=0">
-                <el-card v-for="i in content" id="details-main-card" style="width: 100%">
-                    <template #header>
-                        <div>
-                            <el-avatar :size="50" :src="i.head_url"></el-avatar>
-                            <el-text>[[ i.author ]]</el-text>
-                            <a href="https://www.zhihu.com/question/ + i.answer_id">去看评论</a>
-                            <el-text v-if="i.author_id!=''">or</el-text>
-                            <a href="https://www.zhihu.com/question/i.answer_id"
-                               v-if="i.author_id!=''">去找Ta</a>
-                        </div>
-                    </template>
+                <el-card v-for="i in content" class="details-main-card" style="width: 100%">
+                    <div class="details-main-content-header" v-if="i.is_zhihu">
+                        <el-avatar :size="50" :src="i.head_url" class="details-main-content-header-avatar"></el-avatar>
+                        <el-text class="details-main-content-header-author">[[ i.author ]]</el-text>
+                        <a :href="formatUrl('https://www.zhihu.com/question/', i.answer_id)">去看评论</a>
+                        <el-text v-if="i.author_id!=''" class="details-main-content-header-or">or</el-text>
+                        <a :href="formatUrl('https://www.zhihu.com/people/', i.author_id)" v-if="i.author_id!=''">去找Ta</a>
+                    </div>
+                    <div class="details-main-content-header" v-if="!i.is_zhihu">
+                        <el-avatar :size="50" src="https://pic3.zhimg.com/v2-e76f49080668369848d3e206845f914a_b.jpg" class="details-main-content-header-avatar"></el-avatar>
+                         <el-text class="details-main-content-header-author">这是一条来自本站发布的信息</el-text>
+                        <a href="#" @click="index=4, submitType=1">去发布</a>
+                        <el-text class="details-main-content-header-or">or</el-text>
+                        <a href="#" @click="index=4, submitType=0">去留言找Ta</a>
+                    </div>
+                    <el-divider></el-divider>
                     <div v-html="i.content">
+                    </div>
+                    <el-divider></el-divider>
+
+                    <div class="card-footer">
+                        [[ i.voteup_count ]] 赞同 [[ i.comment_count ]] 评论
+                        <div class="card-footer-time">
+                            [[ formatDate(i.update_time) ]]
+                        </div>
                     </div>
                 </el-card>
                 <el-pagination background layout="prev, pager, next" :total="total"
@@ -95,17 +108,40 @@
         </div>
 
     </div>
+    <div id="editor" v-if="index==4">
+        <div id="editor-main">
+            <div style="width: 90%">
+                <div id="editor-main-text" v-if="submitType==0">
+                    <el-text>欢迎留言~~</el-text>
+                </div>
+                <div id="editor-main-text" v-if="submitType==1">
+                    <el-text>~你可以在这里发布你的择偶标准,建议留下你的联系方式~</el-text>
+                    <br>
+                    <el-text>~内容审核后才会展示,可以留言加速审核或删除~</el-text>
+                </div>
 
+                <ckeditor :editor="editor" v-model="formData.content" :config="editorConfig"></ckeditor>
+                {#            <el-transfer v-model="formData.labels" :data="labels"  :titles=['所有标签','选中标签']></el-transfer>#}
+                <el-button type="primary" @click="save" style="width: 100%; margin-top: 10px">提交
+                </el-button>
+            </div>
+
+        </div>
+
+    </div>
     <div id="footer" v-if="index==1">
         <div>
             <div id="footer-main">
                 <div>
-                    <a href="#" @click="addShow">发布</a>
+                    <a href="#" @click="index=4,submitType=1">发布</a>
                     <el-divider direction="vertical"></el-divider>
-                    <a href="#" @click="addShow">留言</a>
+                    <a href="#" @click="index=4,submitType=0">留言</a>
+                    <el-divider direction="vertical" v-if="index!=1"></el-divider>
+                    <a href="#" @click="index=1" v-if="index!=1">首页</a>
                 </div>
                 <span>收藏本站请使用 Ctrl+D 或者Command+d</span>
-                <span>本站共[[ total ]]数据,每天凌晨3点更新</span>
+                <span>本站数据来自知乎公开回答,如侵权可留言删除</span>
+                <span>本站共[[ siteConfig.total_data ]]条数据,以提供查询服务[[ siteConfig.total_view.total__sum ]]次,每天凌晨3点更新</span>
             </div>
         </div>
     </div>
@@ -125,13 +161,13 @@
                 editor: ClassicEditor,
                 labels: [],
                 formData: {
-                    "labels": [],
-                    "text": '',
-                    "summary": ""
+                    "content": '',
+                    "is_zhihu": false,
+                    "is_activate": false
                 },
                 editorConfig: {
                     simpleUpload: {
-                        uploadUrl: "/code/core/image",
+                        uploadUrl: "/two/storage/image",
                         headers: {
                             name: "img_url"
                         }
@@ -139,17 +175,18 @@
                 },
                 submitDialog: false,
                 saveing: false,
-                siteConfig: {},
-                total: 0
+                siteConfig: {"total_data": 0, "total_view": {"total__sum": 0}},
+                total: 0,
+                submitType: 0,
             }
         },
         mounted() {
             let that = this
-            axios.get('/code/core/site')
+            axios.get('/two/zhihu/site')
                 .then(function (res) {
-                    console.log(res.data[0])
-                    that.siteConfig = res.data[0]
-                    document.body.style.setProperty('background-image', "linear-gradient(to left, rgba(255, 0, 149, 0.2), rgba(0, 247, 255, 0.2)), url(" + that.siteConfig.background + ")")
+                    console.log(res.data)
+                    that.siteConfig = res.data
+                    {#document.body.style.setProperty('background-image', "linear-gradient(to left, rgba(255, 0, 149, 0.2), rgba(0, 247, 255, 0.2)), url(" + that.siteConfig.background + ")")#}
                 })
                 .catch(function (error) {
                     console.log(error);
@@ -160,7 +197,7 @@
                 let that = this
                 that.menu_loading = true
                 that.index = 2
-                axios.get('/zhihu/data?q=' + that.input)
+                axios.get('/two/zhihu/data?q=' + that.input)
                     .then(function (res) {
                         that.full_content = res.data
                         that.content = res.data.results
@@ -186,7 +223,7 @@
                 let that = this
                 that.menu_loading = true
                 document.body.scrollTop = 0
-                axios.get('/zhihu/data?page=' + page + "&q=" + that.input)
+                axios.get('/two/zhihu/data?page=' + page + "&q=" + that.input)
                     .then(function (res) {
                         that.full_content = res.data
                         that.content = res.data.results
@@ -201,6 +238,71 @@
                     .catch(function (error) {
                         console.log(error);
                     });
+            },
+            formatDate(value) {
+                var dt = new Date(value);
+                let year = dt.getFullYear();
+                let month = (dt.getMonth() + 1).toString().padStart(2, '0');
+                let date = dt.getDate().toString().padStart(2, '0');
+                let hour = dt.getHours().toString().padStart(2, '0');
+                let minute = dt.getMinutes().toString().padStart(2, '0');
+                let second = dt.getSeconds().toString().padStart(2, '0');
+                return `${year}-${month}-${date} ${hour}:${minute}:${second}`;
+            },
+            save() {
+                if (this.formData.content.length == 0) {
+                    ElementPlus.ElMessage({
+                        message: '内容不能为空',
+                        type: 'warning',
+                    })
+                    return
+                }
+                ElementPlus.ElMessageBox.confirm(
+                    '确定提交吗?',
+                    '提示',
+                    {
+                        confirmButtonText: 'OK',
+                        cancelButtonText: 'Cancel',
+                        type: 'warning',
+                    }
+                )
+                    .then(() => {
+                        let that = this
+                        that.saveing = true
+                        console.log(that.formData)
+                        axios({
+                            url: that.submitType == 1 ? '/two/zhihu/data' : '/two/zhihu/message',
+                            method: 'post',
+                            data: that.formData,
+                            headers: {
+                                'Content-Type': 'multipart/form-data',//含有附件的表单提交的Content-Type
+                            },
+                        }).then(function (res) {
+                            if (res.status === 201) {
+                                ElementPlus.ElMessage({
+                                    message: '添加成功',
+                                    type: 'success',
+                                })
+                            }
+                            that.saveing = false
+                            that.index = 1
+                            that.formData.text = ''
+                        })
+                            .catch(function (error) {
+                                console.log(error);
+                            });
+                    })
+                    .catch(() => {
+                        ElMessage({
+                            type: 'info',
+                            message: 'Delete canceled',
+                        })
+                    })
+
+
+            },
+            formatUrl(baseUrl, value){
+                return baseUrl + value
             }
         }
 
@@ -219,7 +321,7 @@
         background-repeat: no-repeat;
         background-attachment: fixed;
         background-size: cover;
-    {#background-image: linear-gradient(to left, rgba(255, 0, 149, 0.2), rgba(0, 247, 255, 0.2)), url(https://pica.zhimg.com/80/v2-5c512acfe4d49f2dd3aca874209530d4_720w.webp);#} background-image: url(https://pic1.zhimg.com/v2-6e125bd747bc1feaf9c3c1be1238ffb8_r.jpg?source=1940ef5c);
+    {#background-image: linear-gradient(to left, rgba(255, 0, 149, 0.2), rgba(0, 247, 255, 0.2)), url(https://pica.zhimg.com/80/v2-5c512acfe4d49f2dd3aca874209530d4_720w.webp);#} background-image: url(https://pic1.zhimg.com/v2-6f09ed2fddb3e0136fbea59fe9befb28_r.jpg);
         margin: 0px;
     }
 
@@ -340,10 +442,38 @@
         align-items: center;
     }
 
-    #details-main-card {
+    .details-main-content-header {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+    }
+
+    .details-main-content-header-avatar {
+
+    }
+
+    .details-main-content-header-author {
+        margin-left: 5px;
+        margin-right: 5px;
+        font-style: inherit;
+    }
+
+    .details-main-content-header-or {
+        margin-left: 5px;
+        margin-right: 5px;
+    }
+
+    .details-main-card {
         margin-bottom: 10px;
     }
 
+    .card-footer {
+
+    }
+
+    .card-footer-time {
+        float: right;
+    }
 
     #footer {
         position: fixed;
@@ -363,13 +493,30 @@
     }
 
     #footer-main span {
-        color: #6c757d;
+        color: #343a40;
         font-size: small;
+        font-style: inherit;
     }
 
     .saying {
         text-align: center;
         margin-top: 100px;
+    }
+
+    #editor {
+    }
+
+    #editor-main {
+        display: flex;
+        justify-content: center;
+    {#width: 80%;#}
+    }
+
+    #editor-main-text {
+        margin-top: 20px;
+        margin-bottom: 20px;
+        color: #4e555b;
+        font-style: italic;
     }
 </style>
 </html>
