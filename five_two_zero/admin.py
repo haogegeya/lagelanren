@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 # Register your models here.
-from .models import Content, LeaveMessage, Key
+from .models import Content, LeaveMessage, Key, Question
 
 
 @admin.register(Content)
@@ -16,3 +16,7 @@ class LeaveMessageAdmin(admin.ModelAdmin):
 @admin.register(Key)
 class KeyAdmin(admin.ModelAdmin):
     list_display = ("id", "update_time", "key", "total")
+
+@admin.register(Question)
+class QuestionAdmin(admin.ModelAdmin):
+    list_display = ("id", "update_time", "title", "question_id", "url")

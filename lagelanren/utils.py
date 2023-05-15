@@ -6,10 +6,11 @@
 import re
 import os
 import json
+import requests
 from datetime import datetime
 import markdown
 from command_so.models import Content as CContent, Label
-from five_two_zero.models import Content, Key
+from five_two_zero.models import Content, Key, Question
 
 def init():
     base_dir = r"C:\Users\Administrator\Downloads\linux-command-master\linux-command-master\command"
@@ -47,6 +48,15 @@ def init_five_two_zero_key():
         data = json.load(f)
         for item in data["RECORDS"]:
             Key.objects.create(key=item["key"], total=item["count"],create_time=item["createTime"], update_time=item["updateTime"])
+
+def init_question():
+    res = requests.get("https://www.zhihu.com/question/275359100")
+    res.encoding = "utf-8"
+    pattern = re.compile("""class=\\\\"internal\\\\"\\\\u003E([\s\S]*?)\\\\u003C[\s\S]*?(https:\\\\u002F\\\\u002Fwww.zhihu.com\\\\u002Fquestion\\\\u002F(\d*?))\\\\""")
+    questionIdList = list(set(re.findall(pattern, res.text)))
+    for item in questionIdList:
+        print(item)
+        Question.objects.create(question_id=int(item[2]), title=item[0], url=item[1].encode('utf-8').decode("unicode_escape"))
 
 if __name__ == '__main__':
     base_dir = r"D:\github\linux-command-master\command"

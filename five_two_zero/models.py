@@ -60,3 +60,15 @@ class LeaveMessage(ModelBase):
 
     def __str__(self):
         return self.is_deleted
+
+class Question(ModelBase):
+    question_id = models.BigIntegerField('问题ID', blank=True, null=True, default=None)
+    title = models.CharField("问题标题", max_length=128, default=None)
+    url = models.CharField("问题链接", max_length=128, default=None)
+
+    class Meta:
+        verbose_name = '问题'
+        verbose_name_plural = '问题'
+
+    def __str__(self):
+        return self.title
