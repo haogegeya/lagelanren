@@ -13,6 +13,7 @@ IMPORT_EXPORT_USE_TRANSACTIONS = True
 DEBUG = env.bool('DEBUG', True)  # False if not in os.environ
 
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS')
+CSRF_TRUSTED_ORIGINS = ("http://home.lagelanren.top:250", "http://lagelanren.top")
 
 DATABASES = {
     'default': {
@@ -53,3 +54,5 @@ REST_FRAMEWORK = {
 # 上传文件位置
 MEDIA_ROOT = env("UPLOAD_PATH")
 MEDIA_URL = '/two/media/'
+
+STATIC_ROOT = project_root("static_root")

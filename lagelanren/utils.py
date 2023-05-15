@@ -8,31 +8,31 @@ import os
 import json
 from datetime import datetime
 import markdown
-# from command_so.models import Content, Label
+from command_so.models import Content as CContent, Label
 from five_two_zero.models import Content, Key
 
-# def init():
-#     base_dir = r"D:\github\linux-command-master\command"
-#     labels = Label.objects.filter(name__in=("Linux", "shell"))
-#     for item in os.listdir(base_dir):
-#         with open(os.path.join(base_dir, item), "r", encoding="utf-8") as f:
-#             text = f.read()
-#             cmd = item.split(".")[0]
-#             summary = re.findall(r"===([\s\S]*?)#", text)[0].strip()
-#             summary = cmd + "---" + summary
-#             print(summary)
-#             if Content.objects.filter(summary=summary).exists():
-#                 continue
-#             text = markdown.markdown(text)
-#             if not text:
-#                 continue
-#             content = Content.objects.create(summary=summary, text=text)
-#             for label in labels:
-#                 content.labels.add(label)
-#                 content.save()
+def init():
+    base_dir = r"C:\Users\Administrator\Downloads\linux-command-master\linux-command-master\command"
+    labels = Label.objects.filter(name__in=("Linux", "shell"))
+    for item in os.listdir(base_dir):
+        with open(os.path.join(base_dir, item), "r", encoding="utf-8") as f:
+            text = f.read()
+            cmd = item.split(".")[0]
+            summary = re.findall(r"===([\s\S]*?)#", text)[0].strip()
+            summary = cmd + "---" + summary
+            print(summary)
+            if CContent.objects.filter(summary=summary).exists():
+                continue
+            text = markdown.markdown(text)
+            if not text:
+                continue
+            content = CContent.objects.create(summary=summary, text=text)
+            for label in labels:
+                content.labels.add(label)
+                content.save()
 
 def init_five_two_zero():
-    base_dir = r"C:\Users\EDY\Desktop\content.json"
+    base_dir = r"C:\Users\Administrator\Desktop\content.json"
     with open(base_dir, "r", encoding="utf-8") as f:
         data = json.load(f)
         for item in data["RECORDS"]:
@@ -42,7 +42,7 @@ def init_five_two_zero():
 
 
 def init_five_two_zero_key():
-    base_dir = r"C:\Users\EDY\Desktop\count.json"
+    base_dir = r"C:\Users\Administrator\Desktop\count.json"
     with open(base_dir, "r", encoding="utf-8") as f:
         data = json.load(f)
         for item in data["RECORDS"]:

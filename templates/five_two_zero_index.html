@@ -2,24 +2,24 @@
 <html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
-    <title>COMMAND 搜</title>
+    <title>知乎红娘</title>
     <link
             rel="stylesheet"
-            href="/two/static/css/index.css"
+            href="http://110.42.223.19/static/css/index.css"
     />
-    <link rel="stylesheet" href="/two/static/css/content.css"/>
+    <link rel="stylesheet" href="http://110.42.223.19/static/css/content.css"/>
     <!-- Import Vue 3 -->
-    <script src="/two/static/js/vue@3.js"></script>
+    <script src="http://110.42.223.19/static/js/vue@3.js"></script>
     <!-- Import component library -->
-    <script src="/two/static/js/element-plus.js"></script>
+    <script src="http://110.42.223.19/static/js/element-plus.js"></script>
     <!-- Import component library -->
-    <script src="/two/static/js/axios.min.js"></script>
+    <script src="http://110.42.223.19/static/js/axios.min.js"></script>
     <!-- jQuery文件。务必在bootstrap.min.js 之前引入 -->
-    <script src="/two/static/js/jquery3.5.js"></script>
+    <script src="http://110.42.223.19/static/js/jquery3.5.js"></script>
     <!-- popper.min.js 用于弹窗、提示、下拉菜单 -->
-    <script src="/two/static/js/popper.min.js"></script>
-    <script src="/two/static/js/ckeditor.js"></script>
-    <script src="/two/static/js/ckeditor5vue/ckeditor.js"></script>
+    <script src="http://110.42.223.19/static/js/popper.min.js"></script>
+    <script src="http://110.42.223.19/static/js/ckeditor.js"></script>
+    <script src="http://110.42.223.19/static/js/ckeditor5vue/ckeditor.js"></script>
 </head>
 
 
@@ -62,13 +62,13 @@
                 <el-button @click="search">搜索</el-button>
             </div>
         </div>
-        <div id="details-main">
+        <div id="details-main" v-loading="data_loading" element-loading-background="rgba(0,0,0,0)">
             <div id="details-main-content" v-if="content.length!=0">
                 <el-card v-for="i in content" class="details-main-card" style="width: 100%">
                     <div class="details-main-content-header" v-if="i.is_zhihu">
                         <el-avatar :size="50" :src="i.head_url" class="details-main-content-header-avatar"></el-avatar>
                         <el-text class="details-main-content-header-author">[[ i.author ]]</el-text>
-                        <a :href="formatUrl('https://www.zhihu.com/question/', i.answer_id)">去看评论</a>
+                        <a :href="formatUrl('https://www.zhihu.com/question/', i.question_id + '/answer/' + i.answer_id)">去看评论</a>
                         <el-text v-if="i.author_id!=''" class="details-main-content-header-or">or</el-text>
                         <a :href="formatUrl('https://www.zhihu.com/people/', i.author_id)" v-if="i.author_id!=''">去找Ta</a>
                     </div>
@@ -141,7 +141,7 @@
                 </div>
                 <span>收藏本站请使用 Ctrl+D 或者Command+d</span>
                 <span>本站数据来自知乎公开回答,如侵权可留言删除</span>
-                <span>本站共[[ siteConfig.total_data ]]条数据,以提供查询服务[[ siteConfig.total_view.total__sum ]]次,每天凌晨3点更新</span>
+                <span>本站共[[ siteConfig.total_data ]]条数据,已提供查询服务[[ siteConfig.total_view.total__sum ]]次,每天凌晨3点更新</span>
             </div>
         </div>
     </div>
@@ -157,7 +157,7 @@
                 input: "",
                 index: 1,
                 content: [],
-                menu_loading: false,
+                data_loading: false,
                 editor: ClassicEditor,
                 labels: [],
                 formData: {
@@ -195,13 +195,13 @@
         methods: {
             search() {
                 let that = this
-                that.menu_loading = true
+                that.data_loading = true
                 that.index = 2
                 axios.get('/two/zhihu/data?q=' + that.input)
                     .then(function (res) {
                         that.full_content = res.data
                         that.content = res.data.results
-                        that.menu_loading = false
+                        that.data_loading = false
                         that.total = res.data.count
                         if (res.data.results.length == 0) {
 
@@ -221,13 +221,14 @@
             },
             currentChange(page) {
                 let that = this
-                that.menu_loading = true
+                that.content = []
+                that.data_loading = true
                 document.body.scrollTop = 0
                 axios.get('/two/zhihu/data?page=' + page + "&q=" + that.input)
                     .then(function (res) {
                         that.full_content = res.data
                         that.content = res.data.results
-                        that.menu_loading = false
+                        that.data_loading = false
                         if (res.data.results.length == 0) {
                             document.querySelector(".search-details").style.animationPlayState = "running"
                             setTimeout(() => {
@@ -321,7 +322,8 @@
         background-repeat: no-repeat;
         background-attachment: fixed;
         background-size: cover;
-    {#background-image: linear-gradient(to left, rgba(255, 0, 149, 0.2), rgba(0, 247, 255, 0.2)), url(https://pica.zhimg.com/80/v2-5c512acfe4d49f2dd3aca874209530d4_720w.webp);#} background-image: url(https://pic1.zhimg.com/v2-6f09ed2fddb3e0136fbea59fe9befb28_r.jpg);
+    {#background-image: linear-gradient(to left, rgba(255, 0, 149, 0.2), rgba(0, 247, 255, 0.2)), url(https://pica.zhimg.com/80/v2-5c512acfe4d49f2dd3aca874209530d4_720w.webp);#}
+        background-image: url(https://pic4.zhimg.com/v2-8fc5f75594db4ae8d6fc57c7e879f843_r.jpg);
         margin: 0px;
     }
 

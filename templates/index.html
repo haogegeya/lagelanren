@@ -5,21 +5,21 @@
     <title>COMMAND 搜</title>
     <link
             rel="stylesheet"
-            href="/two/static/css/index.css"
+            href="http://110.42.223.19/static/css/index.css"
     />
-    <link rel="stylesheet" href="/two/static/css/content.css"/>
+    <link rel="stylesheet" href="http://110.42.223.19/static/css/content.css"/>
     <!-- Import Vue 3 -->
-    <script src="/two/static/js/vue@3.js"></script>
+    <script src="http://110.42.223.19/static/js/vue@3.js"></script>
     <!-- Import component library -->
-    <script src="/two/static/js/element-plus.js"></script>
+    <script src="http://110.42.223.19/static/js/element-plus.js"></script>
     <!-- Import component library -->
-    <script src="/two/static/js/axios.min.js"></script>
+    <script src="http://110.42.223.19/static/js/axios.min.js"></script>
     <!-- jQuery文件。务必在bootstrap.min.js 之前引入 -->
-    <script src="/two/static/js/jquery3.5.js"></script>
+    <script src="http://110.42.223.19/static/js/jquery3.5.js"></script>
     <!-- popper.min.js 用于弹窗、提示、下拉菜单 -->
-    <script src="/two/static/js/popper.min.js"></script>
-    <script src="/two/static/js/ckeditor.js"></script>
-    <script src="/two/static/js/ckeditor5vue/ckeditor.js"></script>
+    <script src="http://110.42.223.19/static/js/popper.min.js"></script>
+    <script src="http://110.42.223.19/static/js/ckeditor.js"></script>
+    <script src="http://110.42.223.19/static/js/ckeditor5vue/ckeditor.js"></script>
 </head>
 
 
@@ -143,7 +143,7 @@
             axios.get('/two/code/core/site')
                 .then(function (res) {
                     console.log(res.data)
-                    that.siteConfig = res.data.result[0]
+                    that.siteConfig = res.data.results[0]
                     document.body.style.setProperty('background-image', "linear-gradient(to left, rgba(255, 0, 149, 0.2), rgba(0, 247, 255, 0.2)), url(" + that.siteConfig.background + ")")
                 })
                 .catch(function (error) {
@@ -168,8 +168,6 @@
                 that.menu_loading = true
                 axios.get('/two/code/core/content?text=' + that.input)
                     .then(function (res) {
-                        console.log("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
-                        console.log(res.data.results)
                         that.full_content = res.data.results
                         that.index = res.data.results.length == 0 ? 2 : 3
                         that.content = res.data.results.length == 0 ? '可惜,屁都没找到~~~' : "请尝试输入一些字符，进行搜索！"
@@ -196,12 +194,12 @@
                 let that = this
                 axios.get('/two/code/core/label')
                     .then(function (res) {
-                        console.log(res.data);
+                        console.log(res.data.results);
                         that.labels = []
-                        for (let i = 0; i < res.data.length; i++) {
+                        for (let i = 0; i < res.data.results.length; i++) {
                             that.labels.push({
-                                key: res.data[i]["id"],
-                                label: res.data[i]["name"],
+                                key: res.data.results[i]["id"],
+                                label: res.data.results[i]["name"],
                             })
                         }
                     })
@@ -251,6 +249,7 @@
         background-repeat: no-repeat;
         background-attachment: fixed;
         background-size: cover;
+        {#background-image: url("https://pic3.zhimg.com/v2-bc05f07f91fa0e8efd5df26e601bfcee_r.jpg");#}
     }
 
     body::-webkit-scrollbar {

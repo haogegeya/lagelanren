@@ -32,8 +32,9 @@ class Content(ModelBase):
 
 
 class SiteConfig(ModelBase):
-    background = models.ImageField('图片', blank=True, default=None, null=True, upload_to='%Y%m',
-                                  storage=ImageStorage())
+    # background = models.ImageField('图片', blank=True, default=None, null=True, upload_to='%Y%m',
+    #                               storage=ImageStorage())
+    background = models.CharField("图片", max_length=128)
     total_query = models.IntegerField("查询总数")
     total_query_success = models.IntegerField("有效查询总数")
     class Meta:

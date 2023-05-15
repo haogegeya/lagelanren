@@ -158,3 +158,4 @@ collectstatic
 *.bak
 *.dat
 *.dir
+static_root

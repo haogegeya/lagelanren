@@ -11,6 +11,9 @@ from rest_framework.response import Response
 from .serializers import ContentSeriaslzer, LeaveMessageSeriaslzer
 from .models import Content, Key, LeaveMessage
 from .filters import getContentFilter
+import logging
+from django.conf import settings
+_logger = logging.getLogger(settings.LOGGERS_NAME)
 
 def index(request):
     return render(request, "five_two_zero_index.html")
@@ -32,6 +35,7 @@ class ContentView(mixins.ListModelMixin,
 
     def get(self, request, *args, **kwargs):
         key = request.GET.get("q")
+        _logger.info(f"================ {key}")
         Key.update_key_total(key)
         queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
