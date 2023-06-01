@@ -33,7 +33,7 @@ def init():
                 content.save()
 
 def init_five_two_zero():
-    base_dir = r"C:\Users\Administrator\Desktop\content.json"
+    base_dir = r"C:\Users\Administrator\Desktop\data\content.json"
     with open(base_dir, "r", encoding="utf-8") as f:
         data = json.load(f)
         for item in data["RECORDS"]:
@@ -43,7 +43,7 @@ def init_five_two_zero():
 
 
 def init_five_two_zero_key():
-    base_dir = r"C:\Users\Administrator\Desktop\count.json"
+    base_dir = r"C:\Users\Administrator\Desktop\data\count.json"
     with open(base_dir, "r", encoding="utf-8") as f:
         data = json.load(f)
         for item in data["RECORDS"]:
